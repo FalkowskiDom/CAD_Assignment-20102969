@@ -22,13 +22,19 @@
     "strictPropertyInitialization": false,
     "typeRoots": [
       "./node_modules/@types"
-    ]
+    ],
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "exclude": [
     "node_modules",
     "cdk.out"
   ],
   "include": [
-    "shared/*.json"
+    "bin/**/*.ts",
+    "lib/**/*.ts",
+    "lambda/**/*.ts",
+    "shared/**/*.json"
   ],
 }
