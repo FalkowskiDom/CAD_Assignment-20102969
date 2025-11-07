@@ -3,6 +3,7 @@ import { Construct } from "constructs";
 import { UserPool } from "aws-cdk-lib/aws-cognito";
 import { AuthApi } from './constructs/auth-api'
 import {AppApi } from './constructs/app-api'
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
 export class MovieApiStack extends cdk.Stack {
 
@@ -31,6 +32,13 @@ export class MovieApiStack extends cdk.Stack {
     new AppApi(this, 'AppApi', {
       userPoolId: userPoolId,
       userPoolClientId: userPoolClientId,
+      table: new dynamodb.Table(this, "AppSingleTable", {
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+        sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
+      }),
     } );
 
   } 
