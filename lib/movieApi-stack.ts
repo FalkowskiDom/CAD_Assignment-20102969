@@ -4,9 +4,6 @@ import { UserPool } from "aws-cdk-lib/aws-cognito";
 import { AuthApi } from './constructs/auth-api'
 import {AppApi } from './constructs/app-api'
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import * as node from "aws-cdk-lib/aws-lambda-nodejs";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as eventsources from "aws-cdk-lib/aws-lambda-event-sources";
 
 export class MovieApiStack extends cdk.Stack {
 
@@ -38,27 +35,7 @@ export class MovieApiStack extends cdk.Stack {
       partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
     });
-
-    // Stream-based state change logger
-    const stateLogger = new node.NodejsFunction(this, "StateLoggerFn", {
-      architecture: lambda.Architecture.ARM_64,
-      runtime: lambda.Runtime.NODEJS_16_X,
-      entry: `${__dirname}/../lambda/streamLogger.ts`,
-      timeout: cdk.Duration.seconds(10),
-      memorySize: 128,
-      environment: {
-        TABLE_NAME: singleTable.tableName,
-        REGION: cdk.Aws.REGION,
-      },
-    });
-    stateLogger.addEventSource(new eventsources.DynamoEventSource(singleTable, {
-      startingPosition: lambda.StartingPosition.TRIM_HORIZON,
-      batchSize: 10,
-      retryAttempts: 2,
-    }));
-    singleTable.grantStreamRead(stateLogger);
 
     new AppApi(this, 'AppApi', {
       userPoolId: userPoolId,
