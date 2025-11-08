@@ -5,7 +5,8 @@ import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 const ddbDocClient = createDDbDocClient();
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
-  const username = (event.requestContext?.authorizer as any)?.username || (event.requestContext?.authorizer as any)?.principalId || "";
+  const rc: any = (event as any).requestContext;
+  const username = rc?.authorizer?.username || rc?.authorizer?.principalId || "";
   const path = (event as any).rawPath || (event as any).path || "/";
   console.log(`${username} ${path}`);
 
