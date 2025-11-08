@@ -101,16 +101,9 @@ export class AppApi extends Construct {
     });
     props.table.grantReadData(getMovieFn);
 
-    const getActorsFn = new node.NodejsFunction(this, "GetMovieActorsFn", {
+    const getCastMemberFn = new node.NodejsFunction(this, "GetMovieCastMemberFn", {
       ...appCommonFnProps,
-      entry: `${__dirname}/../../lambda/getMovieActors.ts`,
-      environment: env,
-    });
-    props.table.grantReadData(getActorsFn);
-
-    const getCastMemberFn = new node.NodejsFunction(this, "GetCastMemberFn", {
-      ...appCommonFnProps,
-      entry: `${__dirname}/../../lambda/getCastMember.ts`,
+      entry: `${__dirname}/../../lambda/getMovieCastMembers.ts`,
       environment: env,
     });
     props.table.grantReadData(getCastMemberFn);
@@ -122,12 +115,12 @@ export class AppApi extends Construct {
     });
     props.table.grantReadData(getAwardsFn);
 
-    const postMovieFn = new node.NodejsFunction(this, "PostMovieFn", {
-      ...appCommonFnProps,
-      entry: `${__dirname}/../../lambda/postMovie.ts`,
-      environment: env,
-    });
-    props.table.grantWriteData(postMovieFn);
+    // const postMovieFn = new node.NodejsFunction(this, "PostMovieFn", {
+    //   ...appCommonFnProps,
+    //   entry: `${__dirname}/../../lambda/postMovie.ts`,
+    //   environment: env,
+    // });
+    // props.table.grantWriteData(postMovieFn);
 
     const deleteMovieFn = new node.NodejsFunction(this, "DeleteMovieFn", {
       ...appCommonFnProps,
@@ -141,10 +134,6 @@ export class AppApi extends Construct {
       authorizer: requestAuthorizer,
       authorizationType: apig.AuthorizationType.CUSTOM,
     });
-    actors.addMethod("GET", new apig.LambdaIntegration(getActorsFn), {
-      authorizer: requestAuthorizer,
-      authorizationType: apig.AuthorizationType.CUSTOM,
-    });
     actor.addMethod("GET", new apig.LambdaIntegration(getCastMemberFn), {
       authorizer: requestAuthorizer,
       authorizationType: apig.AuthorizationType.CUSTOM,
@@ -154,9 +143,9 @@ export class AppApi extends Construct {
       authorizationType: apig.AuthorizationType.CUSTOM,
     });
 
-    movies.addMethod("POST", new apig.LambdaIntegration(postMovieFn), {
-      apiKeyRequired: true,
-    });
+    // movies.addMethod("POST", new apig.LambdaIntegration(postMovieFn), {
+    //   apiKeyRequired: true,
+    // });
     movie.addMethod("DELETE", new apig.LambdaIntegration(deleteMovieFn), {
       apiKeyRequired: true,
     });
