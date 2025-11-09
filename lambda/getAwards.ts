@@ -25,7 +25,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
          headers: {
            "content-type": "application/json",
          },
-         body: JSON.stringify({ Message: "Invalid Award Id" }),
+         body: JSON.stringify({ Message: "Invalid Movie Id" }),
        };
      }
      const body = {

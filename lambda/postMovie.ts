@@ -1,6 +1,6 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDDbDocClient();
 
@@ -10,58 +10,61 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   const path = (event as any).rawPath || (event as any).path || "/";
   console.log(`${username} ${path}`);
 
- try {
-     // Print Event
-     console.log("Event: ", event);
- 
-     const commandOutput = await ddbDocClient.send(
-       new ScanCommand({
-         TableName: process.env.TABLE_NAME,
-       })
-     );
-     if (!commandOutput.Items) {
-       return {
-         statusCode: 404,
-         headers: {
-           "content-type": "application/json",
-         },
-         body: JSON.stringify({ Message: "Invalid Award Id" }),
-       };
-     }
-     const body = {
-       data: commandOutput.Items,
-     };
- 
-     // Return Response
-     return {
-       statusCode: 200,
-       headers: {
-         "content-type": "application/json",
-       },
-       body: JSON.stringify(body),
-     };
-   } catch (error: any) {
-     console.log(JSON.stringify(error));
-     return {
-       statusCode: 500,
-       headers: {
-         "content-type": "application/json",
-       },
-       body: JSON.stringify({ error }),
-     };
-   }
- };
- 
- function createDDbDocClient() {
-   const ddbClient = new DynamoDBClient({ region: process.env.REGION });
-   const marshallOptions = {
-     convertEmptyValues: true,
-     removeUndefinedValues: true,
-     convertClassInstanceToMap: true,
-   };
-   const unmarshallOptions = {
-     wrapNumbers: false,
-   };
-   const translateConfig = { marshallOptions, unmarshallOptions };
-   return DynamoDBDocumentClient.from(ddbClient, translateConfig);
- }
+  try {
+    if (!event.body) {
+      const headers: Record<string, string> = { "content-type": "application/json" };
+      return { statusCode: 400, headers, body: JSON.stringify({ message: "Missing body" }) };
+    }
+
+    let data: any;
+    try {
+      data = JSON.parse(event.body);
+    } catch {
+      const headers: Record<string, string> = { "content-type": "application/json" };
+      return { statusCode: 400, headers, body: JSON.stringify({ message: "Invalid JSON body" }) };
+    }
+
+    const id = Number(data.id);
+    const title = String(data.title ?? "").trim();
+    const year = Number(data.year);
+
+    if (!(Number.isFinite(id) && title && Number.isFinite(year))) {
+      const headers: Record<string, string> = { "content-type": "application/json" };
+      return { statusCode: 400, headers, body: JSON.stringify({ message: "Missing required fields: id, title, year" }) };
+    }
+
+    const item = { pk: `m${id}`, sk: "xxxx", id, title, year };
+
+    await ddbDocClient.send(
+      new PutCommand({
+        TableName: process.env.TABLE_NAME,
+        Item: item,
+        ConditionExpression: "attribute_not_exists(pk)",
+      })
+    );
+
+    const headers: Record<string, string> = { "content-type": "application/json", Location: `/movies/${id}` };
+    return { statusCode: 201, headers, body: JSON.stringify({ data: item }) };
+  } catch (error: any) {
+    console.log(JSON.stringify(error));
+    const headers: Record<string, string> = { "content-type": "application/json" };
+    if (error && (error as any).name == "ConditionalCheckFailedException") {
+      return { statusCode: 409, headers, body: JSON.stringify({ message: "Movie already exists" }) };
+    }
+    return { statusCode: 500, headers, body: JSON.stringify({ error }) };
+  }
+};
+
+function createDDbDocClient() {
+  const ddbClient = new DynamoDBClient({ region: process.env.REGION });
+  const marshallOptions = {
+    convertEmptyValues: true,
+    removeUndefinedValues: true,
+    convertClassInstanceToMap: true,
+  };
+  const unmarshallOptions = {
+    wrapNumbers: false,
+  };
+  const translateConfig = { marshallOptions, unmarshallOptions };
+  return DynamoDBDocumentClient.from(ddbClient, translateConfig);
+}
