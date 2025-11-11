@@ -108,6 +108,13 @@ export class AppApi extends Construct {
     });
     props.table.grantReadData(getCastMemberFn);
 
+    const getActorsFn = new node.NodejsFunction(this, "GetActorsFn", {
+      ...appCommonFnProps,
+      entry: `${__dirname}/../../lambda/getActors.ts`,
+      environment: env,
+    });
+    props.table.grantReadData(getActorsFn);
+
     const getAwardsFn = new node.NodejsFunction(this, "GetAwardsFn", {
       ...appCommonFnProps,
       entry: `${__dirname}/../../lambda/getAwards.ts`,
@@ -135,6 +142,10 @@ export class AppApi extends Construct {
       authorizationType: apig.AuthorizationType.CUSTOM,
     });
     actor.addMethod("GET", new apig.LambdaIntegration(getCastMemberFn), {
+      authorizer: requestAuthorizer,
+      authorizationType: apig.AuthorizationType.CUSTOM,
+    });
+    actors.addMethod("GET", new apig.LambdaIntegration(getActorsFn), {
       authorizer: requestAuthorizer,
       authorizationType: apig.AuthorizationType.CUSTOM,
     });
