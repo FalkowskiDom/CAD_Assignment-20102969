@@ -122,12 +122,12 @@ export class AppApi extends Construct {
     });
     props.table.grantReadData(getAwardsFn);
 
-    const postMovieFn = new node.NodejsFunction(this, "PostMovieFn", {
+    const addMovieFn = new node.NodejsFunction(this, "AddMovieFn", {
       ...appCommonFnProps,
-      entry: `${__dirname}/../../lambda/postMovie.ts`,
+      entry: `${__dirname}/../../lambda/addMovie.ts`,
       environment: env,
     });
-    props.table.grantWriteData(postMovieFn);
+    props.table.grantWriteData(addMovieFn);
 
     const deleteMovieFn = new node.NodejsFunction(this, "DeleteMovieFn", {
       ...appCommonFnProps,
@@ -154,7 +154,7 @@ export class AppApi extends Construct {
       authorizationType: apig.AuthorizationType.CUSTOM,
     });
 
-    movies.addMethod("POST", new apig.LambdaIntegration(postMovieFn), {
+    movies.addMethod("POST", new apig.LambdaIntegration(addMovieFn), {
       apiKeyRequired: true,
     });
     movie.addMethod("DELETE", new apig.LambdaIntegration(deleteMovieFn), {
