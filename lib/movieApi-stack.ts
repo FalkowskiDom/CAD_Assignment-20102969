@@ -9,7 +9,7 @@ import * as node from "aws-cdk-lib/aws-lambda-nodejs";
 import * as sources from "aws-cdk-lib/aws-lambda-event-sources";
 import * as custom from "aws-cdk-lib/custom-resources";
 import { marshall } from "@aws-sdk/util-dynamodb";
-import { movies, movieCasts } from "../seed/movies";
+import { movies, movieCasts, awards } from "../seed/movies";
 
 export class MovieApiStack extends cdk.Stack {
 
@@ -79,6 +79,20 @@ export class MovieApiStack extends cdk.Stack {
       },
     }));
 
+    const awardSeedBatch = awards.map((a) => ({
+      PutRequest: {
+        Item: marshall({
+          pk: `w${(a as any).movieId ?? (a as any).actorId}`,
+          sk: a.body,
+          awardId: `w${(a as any).movieId ?? (a as any).actorId}-${a.body}-${a.year}`,
+          category: a.category,
+          year: a.year,
+          ...(('movieId' in a && (a as any).movieId != null) ? { movieId: (a as any).movieId } : {}),
+          ...(('actorId' in a && (a as any).actorId != null) ? { actorId: (a as any).actorId } : {}),
+        }),
+      },
+    }));
+
     new custom.AwsCustomResource(this, `SeedMoviesBatch`, {
       onCreate: {
         service: "DynamoDB",
@@ -104,7 +118,23 @@ export class MovieApiStack extends cdk.Stack {
             [singleTable.tableName]: castSeedBatch,
           },
         },
-        physicalResourceId: custom.PhysicalResourceId.of(`SeedCastsBatch-v1`),
+        physicalResourceId: custom.PhysicalResourceId.of(`SeedCastsBatch-v2`),
+      },
+      policy: custom.AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [singleTable.tableArn],
+      }),
+    });
+
+    new custom.AwsCustomResource(this, `SeedAwardsBatch`, {
+      onCreate: {
+        service: "DynamoDB",
+        action: "batchWriteItem",
+        parameters: {
+          RequestItems: {
+            [singleTable.tableName]: awardSeedBatch,
+          },
+        },
+        physicalResourceId: custom.PhysicalResourceId.of(`SeedAwardsBatch-v1`),
       },
       policy: custom.AwsCustomResourcePolicy.fromSdkCalls({
         resources: [singleTable.tableArn],

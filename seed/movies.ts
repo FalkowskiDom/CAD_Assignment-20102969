@@ -370,12 +370,12 @@ export const movieCasts: MovieCastSeed[] = [
 
 export const awards: AwardSeed[] = [
   // Movie awards
-  { movieId: 848326, body: "Academy",     category: "Best Movie",            year: 2023 },
-  { movieId: 572802, body: "GoldenGlobe",  category: "Best Visual Effects",   year: 2023 },
-  { movieId: 695721, body: "Bafta",        category: "Best Adapted Screenplay", year: 2023 },
+  { movieId: 848326, body: "Academy", category: "Best Movie", year: 2023 },
+  { movieId: 572802, body: "GoldenGlobe", category: "Best Visual Effects", year: 2023 },
+  { movieId: 695721, body: "Bafta", category: "Best Adapted Screenplay", year: 2023 },
   // Actor awards
-  { actorId: 6789,   body: "GoldenGlobe",  category: "Best Supporting Actor", year: 2023 },
-  { actorId: 6790,   body: "Academy",     category: "Best Actress",          year: 2023 },
+  { actorId: 6789, body: "GoldenGlobe", category: "Best Supporting Actor", year: 2023 },
+  { actorId: 6790, body: "Academy", category: "Best Actress", year: 2023 },
 ];
 
 
