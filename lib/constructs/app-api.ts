@@ -1,3 +1,7 @@
+// App API construct
+// - Provisions the main API Gateway REST API for application routes
+// - Configures a request authorizer that reads the Cookie header
+// - Wires Lambda functions for movies, cast, and awards using a single DynamoDB table
 import { Aws } from "aws-cdk-lib";
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
@@ -6,6 +10,9 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as node from "aws-cdk-lib/aws-lambda-nodejs";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
+// Props passed into the AppApi construct
+// - Cognito user pool info for the custom authorizer Lambda
+// - Single-table used for movies, cast, and awards
 type AppApiProps = {
   userPoolId: string;
   userPoolClientId: string;
@@ -17,6 +24,7 @@ export class AppApi extends Construct {
   constructor(scope: Construct, id: string, props: AppApiProps) {
     super(scope, id);
 
+    // Public REST API for app operations
     const appApi = new apig.RestApi(this, "AppApi", {
       description: "App RestApi",
       endpointTypes: [apig.EndpointType.REGIONAL],
@@ -25,6 +33,7 @@ export class AppApi extends Construct {
       },
     });
 
+    // Common Lambda settings for all app handlers
     const appCommonFnProps = {
       architecture: lambda.Architecture.ARM_64,
       timeout: cdk.Duration.seconds(10),
@@ -38,10 +47,12 @@ export class AppApi extends Construct {
       },
     };
 
+    // Example public/protected endpoints (used for testing auth)
     const protectedRes = appApi.root.addResource("protected");
 
     const publicRes = appApi.root.addResource("public");
 
+    // Lambda handlers for public/protected endpoints
     const protectedFn = new node.NodejsFunction(this, "ProtectedFn", {
       ...appCommonFnProps,
       entry: `${__dirname}/../../lambda/protected.ts`,
@@ -52,11 +63,14 @@ export class AppApi extends Construct {
       entry: `${__dirname}/../../lambda/public.ts`,
     });
 
+    // Request authorizer backed by a lambda that validates Cognito JWT from cookie
+    // Custom request authorizer: extracts username from session cookie
     const authorizerFn = new node.NodejsFunction(this, "AuthorizerFn", {
       ...appCommonFnProps,
       entry: `${__dirname}/../../lambda/auth/authorizer.ts`,
     });
 
+    // Wire authorizer to use Cookie header as identity source
     const requestAuthorizer = new apig.RequestAuthorizer(
       this,
       "RequestAuthorizer",
@@ -71,7 +85,7 @@ export class AppApi extends Construct {
 
     publicRes.addMethod("GET", new apig.LambdaIntegration(publicFn));
 
-    // API key for admin (POST/DELETE)
+    // API key for admin (used by POST/DELETE routes)
     const apiKey = new apig.ApiKey(this, "AdminApiKey", {
       apiKeyName: "admin-api-key",
     });
@@ -83,15 +97,17 @@ export class AppApi extends Construct {
     plan.addApiStage({ stage: appApi.deploymentStage });
 
     // Resources per spec
+    // /movies, /movies/{movieId}, /movies/{movieId}/actors, /movies/{movieId}/actors/{actorId}, /awards
     const movies = appApi.root.addResource("movies");
     const movie = movies.addResource("{movieId}");
     const actors = movie.addResource("actors");
     const actor = actors.addResource("{actorId}");
     const awards = appApi.root.addResource("awards");
 
-    // Lambdas for single-table operations
+    // Lambdas for single-table operations (DynamoDB table name/region injected via env)
     const env = { TABLE_NAME: props.table.tableName, REGION: cdk.Aws.REGION } as Record<string,string>;
 
+    // Read a single movie by id (pk=m{movieId}, sk="xxxx")
     const getMovieFn = new node.NodejsFunction(this, "GetMovieFn", {
       ...appCommonFnProps,
       entry: `${__dirname}/../../lambda/getMovie.ts`,
@@ -99,6 +115,7 @@ export class AppApi extends Construct {
     });
     props.table.grantReadData(getMovieFn);
 
+    // Read cast member details for a movie/actor pair
     const getCastMemberFn = new node.NodejsFunction(this, "GetMovieCastMemberFn", {
       ...appCommonFnProps,
       entry: `${__dirname}/../../lambda/getMovieCastMembers.ts`,
@@ -106,6 +123,7 @@ export class AppApi extends Construct {
     });
     props.table.grantReadData(getCastMemberFn);
 
+    // List actors for a movie
     const getActorsFn = new node.NodejsFunction(this, "GetActorsFn", {
       ...appCommonFnProps,
       entry: `${__dirname}/../../lambda/getActors.ts`,
@@ -113,6 +131,7 @@ export class AppApi extends Construct {
     });
     props.table.grantReadData(getActorsFn);
 
+    // Get awards by movie/actor/awardBody query params
     const getAwardsFn = new node.NodejsFunction(this, "GetAwardsFn", {
       ...appCommonFnProps,
       entry: `${__dirname}/../../lambda/getAwards.ts`,
@@ -120,6 +139,7 @@ export class AppApi extends Construct {
     });
     props.table.grantReadData(getAwardsFn);
 
+    // List all movies (scan limited to movie items)
     const getAllMoviesFn = new node.NodejsFunction(this, "GetAllMoviesFn", {
       ...appCommonFnProps,
       entry: `${__dirname}/../../lambda/getAllMovies.ts`,
@@ -127,6 +147,7 @@ export class AppApi extends Construct {
     });
     props.table.grantReadData(getAllMoviesFn);
 
+    // Create a movie item (conditional put)
     const addMovieFn = new node.NodejsFunction(this, "AddMovieFn", {
       ...appCommonFnProps,
       entry: `${__dirname}/../../lambda/addMovie.ts`,
@@ -134,6 +155,7 @@ export class AppApi extends Construct {
     });
     props.table.grantWriteData(addMovieFn);
 
+    // Delete a movie item by id
     const deleteMovieFn = new node.NodejsFunction(this, "DeleteMovieFn", {
       ...appCommonFnProps,
       entry: `${__dirname}/../../lambda/deleteMovie.ts`,
@@ -141,7 +163,7 @@ export class AppApi extends Construct {
     });
     props.table.grantWriteData(deleteMovieFn);
 
-    // Methods and auth
+    // Methods and auth (GET routes require custom authorizer, admin routes require API key)
     movie.addMethod("GET", new apig.LambdaIntegration(getMovieFn), {
       authorizer: requestAuthorizer,
       authorizationType: apig.AuthorizationType.CUSTOM,
@@ -170,3 +192,4 @@ export class AppApi extends Construct {
     });
   }
 }
+

@@ -1,5 +1,7 @@
 import { APIGatewayProxyResult } from "aws-lambda";
 
+// Handler signs the user out
+// Clears the auth cookie by setting it expired in the past
 exports.handler = async function (): Promise<APIGatewayProxyResult> {
   return {
     statusCode: 200,

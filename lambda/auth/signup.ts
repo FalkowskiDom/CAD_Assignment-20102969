@@ -13,6 +13,8 @@ const isValidBodyParams = ajv.compile(schema.definitions["SignUpBody"] || {});
 
 const client = new CognitoIdentityProviderClient({ region:  process.env.REGION  });
 
+// Handler signs up a new user in Cognito
+// Validates body against SignUpBody schema, then calls SignUp
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
     console.log("[EVENT]",JSON.stringify(event));
@@ -33,6 +35,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
     const signUpBody = body as SignUpBody;
 
+    // Build Cognito SignUp parameters
     const params: SignUpCommandInput = {
       ClientId: process.env.CLIENT_ID!,
       Username: signUpBody.username,
@@ -40,6 +43,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       UserAttributes: [{ Name: "email", Value: signUpBody.email }],
     };
 
+    // Call Cognito SignUp API
     const command = new SignUpCommand(params);
     const res = await client.send(command);
     return {

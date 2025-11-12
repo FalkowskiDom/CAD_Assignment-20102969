@@ -4,7 +4,10 @@ import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDDbDocClient();
 
+// Handler returns all cast members for a movie
+// Cast items use single-table keys: pk = c{movieId}, sk = actorId
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
+  // Log username and path
   const rc: any = (event as any).requestContext;
   let username = "";
   if (rc && rc.authorizer && rc.authorizer.username) {
@@ -21,12 +24,14 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   console.log(`${username} ${path}`);
 
   try {
+    // Get movieId from path
     const movieIdStr = event.pathParameters && event.pathParameters.movieId;
     const movieId = movieIdStr ? parseInt(movieIdStr) : NaN;
     if (!Number.isFinite(movieId)) {
       return { statusCode: 400, body: JSON.stringify({ message: "Missing movieId" }) };
     }
 
+    // Query all cast rows for this movie
     const { Items } = await ddbDocClient.send(
       new QueryCommand({
         TableName: process.env.TABLE_NAME,
@@ -37,6 +42,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       })
     );
 
+    // Return list (empty is OK)
     const data = Items && Items.length > 0 ? Items : [];
     return {
       statusCode: 200,
@@ -49,6 +55,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   }
 };
 
+// Create a DynamoDB document client
 function createDDbDocClient() {
   const ddbClient = new DynamoDBClient({ region: process.env.REGION });
   return DynamoDBDocumentClient.from(ddbClient, {

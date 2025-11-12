@@ -5,13 +5,17 @@ import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDDbDocClient();
 
+// Handler returns all movie items from the single table
+// Movies use keys: pk starts with "m" and sk is "xxxx"
 export const handler: APIGatewayProxyHandlerV2  = async (event) => {
   try {
+    // Log username and request path for auditing
     const rc: any = (event as any).requestContext;
     const username = rc?.authorizer?.username || rc?.authorizer?.principalId || "";
     const path = (event as any).rawPath || (event as any).path || "/";
     console.log(`${username} ${path}`);
 
+    // Scan table and filter only movie rows
     const commandOutput = await ddbDocClient.send(
       new ScanCommand({
         TableName: process.env.TABLE_NAME,
@@ -19,6 +23,7 @@ export const handler: APIGatewayProxyHandlerV2  = async (event) => {
         ExpressionAttributeValues: { ":m": "m", ":x": "xxxx" },
       })
     );
+    // If none found return 404
     if (!commandOutput.Items) {
       return {
         statusCode: 404,
@@ -28,6 +33,7 @@ export const handler: APIGatewayProxyHandlerV2  = async (event) => {
         body: JSON.stringify({ Message: "Invalid movie Id" }),
       };
     }
+    // Return list of movies
     const body = {
       data: commandOutput.Items,
     };

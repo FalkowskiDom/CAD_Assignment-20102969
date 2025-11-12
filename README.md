@@ -1,14 +1,32 @@
-# Welcome to your CDK TypeScript project
+## Assignment - Cloud App Development.
 
-This is a blank project for CDK development with TypeScript.
+__Name:__ Dominik Falkowski
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+### Links.
+__Demo:__ A link to your YouTube video demonstration.
 
-## Useful commands
+### Screenshots.
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `cdk deploy`      deploy this stack to your default AWS account/region
-* `cdk diff`        compare deployed stack with current state
-* `cdk synth`       emits the synthesized CloudFormation template
+AppApi.png
+
+
+DynamoDBTable.png
+
+[A screenshot from CloudWatch logs showing an example of User Activity logging, e.g.
+
+jbloggs /awards?movie=1234&awardBody=Academy
+]
+
+### Design features (if required).
+Resources: /movies, /movies/{movieId}, /movies/{movieId}/actors, /movies/{movieId}/actors/{actorId}, /awards.
+Adds a custom request authorizer (Lambda) reading the Cookie header.
+Applies API key protection to admin routes (POST/DELETE).
+Seeding with AwsCustomResource
+
+###  Extra (If relevant).
+
+[ State any other aspects of your solution that use CDK/serverless features not covered in the lectures.]
+
+### References.
+AI prompts.md
+https://serverlessland.com/patterns/dynamodb-seed-data-on-create-cdk

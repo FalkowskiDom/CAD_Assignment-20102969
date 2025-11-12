@@ -15,6 +15,8 @@ const client = new CognitoIdentityProviderClient({
   region: process.env.REGION,
 });
 
+// Handler signs a user in using Cognito USER_PASSWORD_AUTH
+// Validates body, calls InitiateAuth, and sets a cookie with the token
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
     console.log("[EVENT]",JSON.stringify(event));
@@ -38,6 +40,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
     const signInBody = body as SignInBody;
 
+    // Build auth request
     const params: InitiateAuthCommandInput = {
       ClientId: process.env.CLIENT_ID!,
       AuthFlow: "USER_PASSWORD_AUTH",
@@ -47,6 +50,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       },
     };
 
+    // Call Cognito to authenticate
     const command = new InitiateAuthCommand(params);
     const { AuthenticationResult } = await client.send(command);
     console.log("Auth", AuthenticationResult);
@@ -60,6 +64,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     }
     const token = AuthenticationResult.IdToken;
 
+    // Return token in cookie and body
     return {
       statusCode: 200,
       headers: {

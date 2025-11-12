@@ -1,10 +1,12 @@
 import { DynamoDBStreamEvent } from "aws-lambda";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 
+// Handler logs DynamoDB stream state changes to CloudWatch
+// It prints a short line describing the action and key details
 export const handler = async (event: DynamoDBStreamEvent) => {
   try {
     for (const record of event.Records) {
-      const action = record.eventName; // INSERT  MODIFY  REMOVE
+      const action = record.eventName; // INSERT | MODIFY | REMOVE
       if (action == "INSERT") {
         const newItem = record.dynamodb?.NewImage ? unmarshall(record.dynamodb.NewImage as any) : undefined;
         console.log(`POST + ${formatItem(newItem)}`);
@@ -22,6 +24,7 @@ export const handler = async (event: DynamoDBStreamEvent) => {
   }
 };
 
+// Format a few important attributes for compact logs
 function formatItem(item: any): string {
   if (!item) return "<undefined>";
   const parts: string[] = [];

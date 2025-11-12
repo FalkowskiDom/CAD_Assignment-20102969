@@ -16,6 +16,8 @@ const isValidBodyParams = ajv.compile(
 
 const client = new CognitoIdentityProviderClient({ region: process.env.REGION });
 
+// Handler confirms a user's sign-up
+// Validates body and calls Cognito ConfirmSignUp
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
     console.log("[EVENT]",JSON.stringify(event));
@@ -35,12 +37,14 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     }
     const confirmSignUpBody = body as ConfirmSignUpBody;
 
+    // Build ConfirmSignUp request
     const params: ConfirmSignUpCommandInput = {
       ClientId: process.env.CLIENT_ID!,
       Username: confirmSignUpBody.username,
       ConfirmationCode: confirmSignUpBody.code,
     };
 
+    // Call Cognito ConfirmSignUp
     const command = new ConfirmSignUpCommand(params);
     await client.send(command);
 

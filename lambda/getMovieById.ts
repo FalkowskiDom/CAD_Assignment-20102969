@@ -5,9 +5,11 @@ import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDDbDocClient();
 
+// Handler returns a single movie by id
+// Key pattern: pk = m{movieId}, sk = "xxxx"
 export const handler: Handler = async (event, context) => {
   try {
-    // Print Event
+    // Print Event for debugging
     console.log("Event: ", JSON.stringify(event?.queryStringParameters));
     const parameters = event?.queryStringParameters;
     const movieId = parameters ? parseInt(parameters.movieId) : undefined;
@@ -22,6 +24,7 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
+    // Fetch from DynamoDB (uses current key shape for this function)
     const commandOutput = await ddbDocClient.send(
       new GetCommand({
         TableName: process.env.TABLE_NAME,
@@ -62,6 +65,7 @@ export const handler: Handler = async (event, context) => {
   }
 };
 
+// Create document client
 function createDDbDocClient() {
   const ddbClient = new DynamoDBClient({ region: process.env.REGION });
   const marshallOptions = {
