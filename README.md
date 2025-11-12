@@ -3,19 +3,15 @@
 __Name:__ Dominik Falkowski
 
 ### Links.
-__Demo:__ A link to your YouTube video demonstration.
+__Demo:__ [Link to YouTube video.](https://youtu.be/q9UbpGeD3hs)
 
 ### Screenshots.
 
-AppApi.png
+![App Api](AppApi.png)
 
+![DynamoDB Table](DynamoDBTable.png)
 
-DynamoDBTable.png
-
-[A screenshot from CloudWatch logs showing an example of User Activity logging, e.g.
-
-jbloggs /awards?movie=1234&awardBody=Academy
-]
+![CloudWatch Logs](CloudWatchLogs.png)
 
 ### Design features (if required).
 Resources: /movies, /movies/{movieId}, /movies/{movieId}/actors, /movies/{movieId}/actors/{actorId}, /awards.
@@ -30,3 +26,5 @@ Seeding with AwsCustomResource
 ### References.
 AI prompts.md
 https://serverlessland.com/patterns/dynamodb-seed-data-on-create-cdk
+https://www.youtube.com/watch?v=q__Yopq6aio
+https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html
