@@ -11,7 +11,7 @@ __Demo:__ [Link to YouTube video.](https://youtu.be/q9UbpGeD3hs)
 
 ![DynamoDB Table](DynamoDBTable.png)
 
-![CloudWatch Logs](CloudWatchLogs.png)
+![CloudWatch Logs](CloudwatchLogs.png)
 
 ### Design features (if required).
 Resources: /movies, /movies/{movieId}, /movies/{movieId}/actors, /movies/{movieId}/actors/{actorId}, /awards.
