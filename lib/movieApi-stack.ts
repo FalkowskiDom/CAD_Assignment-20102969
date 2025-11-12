@@ -2,7 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { UserPool } from "aws-cdk-lib/aws-cognito";
 import { AuthApi } from './constructs/auth-api'
-import {AppApi } from './constructs/app-api'
+import { AppApi } from './constructs/app-api'
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as node from "aws-cdk-lib/aws-lambda-nodejs";
@@ -40,6 +40,7 @@ export class MovieApiStack extends cdk.Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
+      stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
@@ -49,5 +50,81 @@ export class MovieApiStack extends cdk.Stack {
       table: singleTable,
       castTable: singleTable,
     });
+
+    // Seed data into single table
+    const movieSeedBatch = movies.map((m) => ({
+      PutRequest: {
+        Item: marshall({
+          pk: `m${m.id}`,
+          sk: "xxxx",
+          id: m.id,
+          title: m.title,
+          overview: (m as any).overview,
+          release_date: (m as any).release_date,
+        }),
+      },
+    }));
+
+    const castSeedBatch = movieCasts.map((c) => ({
+      PutRequest: {
+        Item: marshall({
+          pk: `c${c.movieId}`,
+          sk: String((c as any).actorId),
+          movieId: c.movieId,
+          actorId: (c as any).actorId,
+          actorName: c.actorName,
+          roleName: c.roleName,
+          roleDescription: c.roleDescription,
+        }),
+      },
+    }));
+
+    new custom.AwsCustomResource(this, `SeedMoviesBatch`, {
+      onCreate: {
+        service: "DynamoDB",
+        action: "batchWriteItem",
+        parameters: {
+          RequestItems: {
+            [singleTable.tableName]: movieSeedBatch,
+          },
+        },
+        physicalResourceId: custom.PhysicalResourceId.of(`SeedMoviesBatch-v1`),
+      },
+      policy: custom.AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [singleTable.tableArn],
+      }),
+    });
+
+    new custom.AwsCustomResource(this, `SeedCastsBatch`, {
+      onCreate: {
+        service: "DynamoDB",
+        action: "batchWriteItem",
+        parameters: {
+          RequestItems: {
+            [singleTable.tableName]: castSeedBatch,
+          },
+        },
+        physicalResourceId: custom.PhysicalResourceId.of(`SeedCastsBatch-v1`),
+      },
+      policy: custom.AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [singleTable.tableArn],
+      }),
+    });
+
+    // Stream logger for state changes
+    const logFn = new node.NodejsFunction(this, "StateChangeLoggerFn", {
+      architecture: lambda.Architecture.ARM_64,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: "handler",
+      entry: `${__dirname}/../lambda/logStateChange.ts`,
+      environment: { REGION: cdk.Aws.REGION },
+    });
+    logFn.addEventSource(new sources.DynamoEventSource(singleTable, {
+      startingPosition: lambda.StartingPosition.LATEST,
+      batchSize: 25,
+      retryAttempts: 2,
+    }));
   }
 }

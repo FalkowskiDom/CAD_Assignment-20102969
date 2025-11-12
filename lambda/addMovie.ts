@@ -21,7 +21,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
 
     const id = Number(body.id);
     const title = String(body.title || "").trim();
-    const overview = typeof body.overview === "string" ? body.overview : undefined;
+    const overview = typeof body.overview == "string" ? body.overview : undefined;
     const release_date = typeof body.release_date == "string" ? body.release_date : undefined;
     const year = body.year != undefined ? Number(body.year) : undefined;
 
@@ -54,7 +54,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
     };
   } catch (error: any) {
     console.log(JSON.stringify(error));
-    if (error && error.name === "ConditionalCheckFailedException") {
+    if (error && error.name == "ConditionalCheckFailedException") {
       return {
         statusCode: 409,
         headers: { "content-type": "application/json" },
