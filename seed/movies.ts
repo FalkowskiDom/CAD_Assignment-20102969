@@ -6,6 +6,14 @@ type MovieCastSeed = {
   roleName: string;
   roleDescription: string;
 }
+type AwardSeed = {
+  // If movie award, set movieId; if actor award, set actorId
+  movieId?: number;
+  actorId?: number;
+  body: string;      
+  category: string;    
+  year: number;
+}
 
 export const movies : Movie[] = [
   {
@@ -79,7 +87,7 @@ export const movies : Movie[] = [
     id: 787699,
     original_language: 'en',
     original_title: 'Wonka',
-    overview: 'Willy Wonka – chock-full of ideas and determined to change the world one delectable bite at a time – is proof that the best things in life begin with a dream, and if you’re lucky enough to meet Willy Wonka, anything is possible.',
+    overview: 'Willy Wonka - chock-full of ideas and determined to change the world one delectable bite at a time - is proof that the best things in life begin with a dream, and if you are lucky enough to meet Willy Wonka, anything is possible.',
     popularity: 949.214,
     poster_path: '/qhb1qOilapbapxWQn9jtRCMwXJF.jpg',
     release_date: '2023-12-06',
@@ -331,33 +339,43 @@ export const movies : Movie[] = [
 ]
 export const movieCasts: MovieCastSeed[] = [
  {
-    movieId: 1234,
+    movieId: 848326,
     actorId: 6789,
     actorName: "Joe Bloggs",
     roleName: "Male Character 1",
     roleDescription: "description of character 1",
  },
  {
-    movieId: 1234,
+    movieId: 572802,
     actorId: 6790,
     actorName: "Alice Broggs",
     roleName: "Female Character 1",
     roleDescription: "description of character 2",
  },
  {
-    movieId: 1234,
+    movieId: 695721,
     actorId: 6791,
     actorName: "Joe Cloggs",
     roleName: "Male Character 2",
     roleDescription: "description of character 3",
  },
  {
-    movieId: 2345,
+    movieId: 572802,
     actorId: 6789,
     actorName: "Joe Bloggs",
     roleName: "Male Character 1",
     roleDescription: "description of character 3",
  },
+];
+
+export const awards: AwardSeed[] = [
+  // Movie awards
+  { movieId: 848326, body: "Academy",     category: "Best Movie",            year: 2023 },
+  { movieId: 572802, body: "GoldenGlobe",  category: "Best Visual Effects",   year: 2023 },
+  { movieId: 695721, body: "Bafta",        category: "Best Adapted Screenplay", year: 2023 },
+  // Actor awards
+  { actorId: 6789,   body: "GoldenGlobe",  category: "Best Supporting Actor", year: 2023 },
+  { actorId: 6790,   body: "Academy",     category: "Best Actress",          year: 2023 },
 ];
 
 
