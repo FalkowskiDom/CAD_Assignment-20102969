@@ -1,4 +1,11 @@
-import {Movie, MovieCast} from '../shared/types'
+import {Movie} from '../shared/types'
+type MovieCastSeed = {
+  movieId: number;
+  actorId: number;
+  actorName: string;
+  roleName: string;
+  roleDescription: string;
+}
 
 export const movies : Movie[] = [
   {
@@ -322,27 +329,31 @@ export const movies : Movie[] = [
     vote_count: 325
   }
 ]
-export const movieCasts: MovieCast[] = [
+export const movieCasts: MovieCastSeed[] = [
  {
     movieId: 1234,
+    actorId: 6789,
     actorName: "Joe Bloggs",
     roleName: "Male Character 1",
     roleDescription: "description of character 1",
  },
  {
     movieId: 1234,
+    actorId: 6790,
     actorName: "Alice Broggs",
     roleName: "Female Character 1",
     roleDescription: "description of character 2",
  },
  {
     movieId: 1234,
+    actorId: 6791,
     actorName: "Joe Cloggs",
     roleName: "Male Character 2",
     roleDescription: "description of character 3",
  },
  {
     movieId: 2345,
+    actorId: 6789,
     actorName: "Joe Bloggs",
     roleName: "Male Character 1",
     roleDescription: "description of character 3",

@@ -10,6 +10,7 @@ type AppApiProps = {
   userPoolId: string;
   userPoolClientId: string;
   table: dynamodb.ITable;
+  castTable: dynamodb.ITable;
 };
 
 export class AppApi extends Construct {
@@ -66,10 +67,7 @@ export class AppApi extends Construct {
       }
     );
 
-    protectedRes.addMethod("GET", new apig.LambdaIntegration(protectedFn), {
-      authorizer: requestAuthorizer,
-      authorizationType: apig.AuthorizationType.CUSTOM,
-    });
+    protectedRes.addMethod("GET", new apig.LambdaIntegration(protectedFn));
 
     publicRes.addMethod("GET", new apig.LambdaIntegration(publicFn));
 
@@ -153,7 +151,6 @@ export class AppApi extends Construct {
       authorizer: requestAuthorizer,
       authorizationType: apig.AuthorizationType.CUSTOM,
     });
-
     movies.addMethod("POST", new apig.LambdaIntegration(addMovieFn), {
       apiKeyRequired: true,
     });

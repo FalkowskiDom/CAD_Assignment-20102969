@@ -4,7 +4,11 @@ import { UserPool } from "aws-cdk-lib/aws-cognito";
 import { AuthApi } from './constructs/auth-api'
 import {AppApi } from './constructs/app-api'
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import { generateBatch } from "../shared/utils";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as node from "aws-cdk-lib/aws-lambda-nodejs";
+import * as sources from "aws-cdk-lib/aws-lambda-event-sources";
+import * as custom from "aws-cdk-lib/custom-resources";
+import { marshall } from "@aws-sdk/util-dynamodb";
 import { movies, movieCasts } from "../seed/movies";
 
 export class MovieApiStack extends cdk.Stack {
@@ -43,22 +47,7 @@ export class MovieApiStack extends cdk.Stack {
       userPoolId: userPoolId,
       userPoolClientId: userPoolClientId,
       table: singleTable,
+      castTable: singleTable,
     });
-    
-      const movieCastsTable = new dynamodb.Table(this, "MovieCastTable", {
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      partitionKey: { name: "movieId", type: dynamodb.AttributeType.NUMBER },
-      sortKey: { name: "actorName", type: dynamodb.AttributeType.STRING },
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      tableName: "MovieCast",
- });
-
-    movieCastsTable.addLocalSecondaryIndex({
-      indexName: "roleIx",
-      sortKey: { name: "roleName", type: dynamodb.AttributeType.STRING },
- });
-
-
-
   }
 }
