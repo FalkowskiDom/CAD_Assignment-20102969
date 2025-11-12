@@ -5,14 +5,18 @@ import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDDbDocClient();
 
-export const handler: APIGatewayProxyHandlerV2  = async (event, context) => {
+export const handler: APIGatewayProxyHandlerV2  = async (event) => {
   try {
-    // Print Event
-    console.log("Event: ", event);
+    const rc: any = (event as any).requestContext;
+    const username = rc?.authorizer?.username || rc?.authorizer?.principalId || "";
+    const path = (event as any).rawPath || (event as any).path || "/";
+    console.log(`${username} ${path}`);
 
     const commandOutput = await ddbDocClient.send(
       new ScanCommand({
         TableName: process.env.TABLE_NAME,
+        FilterExpression: "begins_with(pk, :m) AND sk = :x",
+        ExpressionAttributeValues: { ":m": "m", ":x": "xxxx" },
       })
     );
     if (!commandOutput.Items) {

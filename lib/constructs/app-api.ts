@@ -120,6 +120,13 @@ export class AppApi extends Construct {
     });
     props.table.grantReadData(getAwardsFn);
 
+    const getAllMoviesFn = new node.NodejsFunction(this, "GetAllMoviesFn", {
+      ...appCommonFnProps,
+      entry: `${__dirname}/../../lambda/getAllMovies.ts`,
+      environment: env,
+    });
+    props.table.grantReadData(getAllMoviesFn);
+
     const addMovieFn = new node.NodejsFunction(this, "AddMovieFn", {
       ...appCommonFnProps,
       entry: `${__dirname}/../../lambda/addMovie.ts`,
@@ -148,6 +155,10 @@ export class AppApi extends Construct {
       authorizationType: apig.AuthorizationType.CUSTOM,
     });
     awards.addMethod("GET", new apig.LambdaIntegration(getAwardsFn), {
+      authorizer: requestAuthorizer,
+      authorizationType: apig.AuthorizationType.CUSTOM,
+    });
+    movies.addMethod("GET", new apig.LambdaIntegration(getAllMoviesFn), {
       authorizer: requestAuthorizer,
       authorizationType: apig.AuthorizationType.CUSTOM,
     });
